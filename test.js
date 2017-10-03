@@ -1,21 +1,19 @@
 
-testFor(function () {
-    console.log("Callback is call")
-});
-koko(function () {
-    console.log("koko calback is work");
-});
+const crypto = require('crypto');
+const cipher = crypto.createCipher('aes192','key');
 
-function testFor(callback) {
-    for(let i=0;i<100;i++){
-        console.log(i);
+let enc = '';
+
+cipher.on('readable',()=>{
+    const data = cipher.read();
+    if(data){
+        enc += data.toString('hex');
     }
-    callback();
-}
-function koko(callback) {
-    let sum=0;
-    for(let i=0;i<100;i++){sum+=i;}
-    console.log("koko is working");
-    callback();
+});
 
-}
+cipher.on('end',()=>{
+    console.log(enc);
+});
+
+cipher.write("Some clear text data");
+cipher.end();

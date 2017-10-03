@@ -1,6 +1,8 @@
 // server.js
 const fs = require('fs');
 const net = require('net');
+const ses = require('stream');
+const crypto = require('crypto');
 const port = 8124;
 let seed=0;
 
@@ -52,6 +54,38 @@ const server = net.createServer(function(client){
                         }
                     });
 
+
+                    if(data.substring(0,6)=="DECODE"){
+                        const adr = data.split(' ');
+                        const reable = fs.createReadStream(adr[1]);
+                        const write = fs.createWriteStream(adr[2]);
+                        const deCipher = crypto.createDecipher('aes192',adr[3]);
+
+                        reable.pipe(deCipher).pipe(write);
+                        client.end('DEC','UTF-8');
+                        return;
+                    }
+
+
+                    if(data.substring(0,6)=="ENCODE"){
+                        const adr = data.split(' ');
+                        const reable = fs.createReadStream(adr[1]);
+                        const write = fs.createWriteStream(adr[2]);
+                        const cipher = crypto.createCipher('aes192',adr[3]);
+                        reable.pipe(cipher).pipe(write);
+                        client.write('THIRD');
+                        return;
+                    }
+
+
+                    if(data.substring(0,4)==='COPY'){
+                        const adr = data.split(' ');
+                        const reable = fs.createReadStream(adr[1]);
+                        const writer = fs.createWriteStream(adr[2]);
+                        reable.pipe(writer);
+                        client.write('SECOND');
+                        return;
+                    }
                     if (data.substring(0, 4) === "Send") {
                         fs.mkdir(fileAddres + "\\" + socetname, function () {
                             fs.open(fileAddres + "\\" + socetname + "\\" + filesName[fileNameId], "a", function (err, writer) {
@@ -93,6 +127,11 @@ const server = net.createServer(function(client){
 
                     }
                     switch (data) {
+                        case 'REMOTE':{
+                            client.write('ACK');
+                            FielsBool = false;
+                            QABool = false;
+                        }break;
                         case 'FILES': {
                             client.write('ACK');
                             FielsBool = true;
